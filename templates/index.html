@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search XID</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- Message display -->
+    {% if message %}
+      <div class="success-message">{{ message }}</div>
+    {% endif %}
+    {% if error %}
+      <div class="error-message">{{ error }}</div>
+    {% endif %}
+    <!-- Loading Spinner -->
+    <div id="spinner-overlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(255,255,255,0.7);z-index:9999;align-items:center;justify-content:center;">
+      <div class="spinner" style="border:8px solid #f3f3f3;border-top:8px solid #3498db;border-radius:50%;width:60px;height:60px;animation:spin 1s linear infinite;"></div>
+    </div>
+    <div class="card">
+        <h2>Upload XID CSV</h2>
+        <form method="POST" enctype="multipart/form-data" id="main-form">
+            <label for="file-upload" class="custom-file-label">Choose CSV File</label>
+            <input id="file-upload" class="custom-file-input" type="file" name="file" accept=".csv" required>
+            <span id="file-chosen">No file chosen</span>
+            <button type="submit" name="action" value="upload">Upload and Fetch</button>
+            <button type="submit" name="action" value="update_score">Update matching score</button>
+        </form>
+        <form method="POST" action="/get_output_csv" style="margin-top:20px;">
+            <button type="submit" class="output-btn">Get Output CSV</button>
+        </form>
+    </div>
+    <script>
+        const fileInput = document.getElementById('file-upload');
+        const fileChosen = document.getElementById('file-chosen');
+        const fileLabel = document.querySelector('.custom-file-label');
+        fileLabel.addEventListener('click', function() {
+            fileInput.click();
+        });
+        fileInput.addEventListener('change', function(){
+            fileChosen.textContent = this.files[0] ? this.files[0].name : 'No file chosen';
+        });
+        // Spinner logic
+        document.getElementById('main-form').addEventListener('submit', function() {
+            document.getElementById('spinner-overlay').style.display = 'flex';
+        });
+    </script>
+    <style>
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      .success-message {
+        color: #155724;
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        padding: 10px;
+        margin: 20px auto;
+        width: fit-content;
+        border-radius: 5px;
+        text-align: center;
+      }
+      .error-message {
+        color: #721c24;
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        padding: 10px;
+        margin: 20px auto;
+        width: fit-content;
+        border-radius: 5px;
+        text-align: center;
+      }
+      .output-btn {
+        background: #007bff;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: 10px;
+      }
+      .output-btn:hover {
+        background: #0056b3;
+      }
+    </style>
+</body>
+</html>

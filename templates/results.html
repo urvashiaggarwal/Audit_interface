@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Results for {{ xid }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container mt-5">
+    <h2 class="mb-4">Search Results for <span class="text-primary">{{ xid }}</span></h2>
+
+    {% for source, records in data.items() %}
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                {{ source|upper }}
+            </div>
+            <div class="card-body">
+                {% if records %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    {% for key in records[0].keys() %}
+                                        <th>{{ key }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in records %}
+                                    <tr>
+                                        {% for value in row.values() %}
+                                            <td>{{ value }}</td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No data found for {{ source }}.</p>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+
+    <a href="/" class="btn btn-secondary">🔙 Search Again</a>
+</body>
+</html>

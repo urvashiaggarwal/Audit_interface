@@ -1,0 +1,82 @@
+body {
+    background: #edfafc;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.card {
+    background: #ffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    padding: 2.5rem 2rem 2rem 2rem;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+}
+h2 {
+    margin-top: 0;
+    color: #2d3a4b;
+    font-weight: 600;
+}
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+input[type="file"] {
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 0.5rem;
+    background: #f9fafb;
+    font-size: 1rem;
+}
+button {
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 0.7rem 1.2rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+button:hover {
+    background: #1e40af;
+}
+button + button {
+    background: #10b981;
+}
+button + button:hover {
+    background: #059669;
+}
+/* Custom file input styles */
+input[type="file"].custom-file-input {
+    display: none;
+}
+.custom-file-label {
+    display: inline-block;
+    background: #5f4008;
+    color: #fff;
+    border-radius: 6px;
+    padding: 0.7rem 1.2rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-bottom: 0.5rem;
+}
+.custom-file-label:hover {
+    background: #e68b14;
+}
+/* Optional: show selected file name */
+#file-chosen {
+    margin-left: 10px;
+    font-size: 0.95rem;
+    color: #bd651e;
+} 
+
