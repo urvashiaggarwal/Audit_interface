@@ -117,42 +117,16 @@ def index():
 
     if request.method == 'POST':
         action = request.form.get('action')
-        if action == 'upload':
-            file = request.files['file']
-            if not file or not file.filename.endswith('.csv'):
-                return "Please upload a valid CSV with 'xid' column"
-
-            df = pd.read_csv(file)
-            if 'xid' not in df.columns:
-                return "CSV must contain an 'xid' column"
-
-            sheet_data = {}  # key: sheet name, value: list of records
-
-            for xid in df['xid'].dropna().unique():
-                xid = int(xid)
-                xid_data = fetcher.fetch_all_data_by_xid(xid)
-                for source, records in xid_data.items():
-                    for record in records:
-                        record['xid'] = xid
-                        record['source'] = source
-                    sheet_data.setdefault(source, []).extend(records)
-
-            output = BytesIO()
-            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                for sheet_name, records in sheet_data.items():
-                    if records:  # Avoid writing empty sheets
-                        pd.DataFrame(records).to_excel(writer, sheet_name=sheet_name[:31], index=False)
-
-            output.seek(0)
-            return send_file(
-                output,
-                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                as_attachment=True,
-                download_name='xid_data_export.xlsx'
-            )
-        elif action == 'update_score':
+        if action == 'update_score':
             try:
-                update_matching_score()
+                file = request.files['file']
+                if not file or not file.filename.endswith('.csv'):
+                    return render_template('index.html', error="Please upload a valid CSV with 'xid' column")
+                df = pd.read_csv(file)
+                if 'xid' not in df.columns:
+                    return render_template('index.html', error="CSV must contain an 'xid' column")
+                xids = [int(x) for x in df['xid'].dropna().unique()]
+                update_matching_score(xids)
                 run_competition_operations()
                 return render_template('index.html', message="✅ Matching score updated and scoring complete!")
             except Exception as e:

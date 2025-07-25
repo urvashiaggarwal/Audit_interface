@@ -17,12 +17,11 @@
       <div class="spinner" style="border:8px solid #f3f3f3;border-top:8px solid #3498db;border-radius:50%;width:60px;height:60px;animation:spin 1s linear infinite;"></div>
     </div>
     <div class="card">
-        <h2>Upload XID CSV</h2>
+        <h2>Update Matching Score for Selected XIDs</h2>
         <form method="POST" enctype="multipart/form-data" id="main-form">
-            <label for="file-upload" class="custom-file-label">Choose CSV File</label>
+            <label for="file-upload" class="custom-file-label">Choose CSV File (with xid column)</label>
             <input id="file-upload" class="custom-file-input" type="file" name="file" accept=".csv" required>
             <span id="file-chosen">No file chosen</span>
-            <button type="submit" name="action" value="upload">Upload and Fetch</button>
             <button type="submit" name="action" value="update_score">Update matching score</button>
         </form>
         <form method="POST" action="/get_output_csv" style="margin-top:20px;">

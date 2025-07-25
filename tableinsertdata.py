@@ -8,7 +8,7 @@ DB_CONFIG = {
 }
 PROJECT_KEY = "xid" 
 
-def update_matching_score():
+def update_matching_score(xids):
     conn = mysql.connector.connect(**DB_CONFIG)
     cursor = conn.cursor(dictionary=True)
 
@@ -20,12 +20,9 @@ def update_matching_score():
     cursor.execute("SELECT * FROM data_points")
     data_points_rows = cursor.fetchall()
 
-    # For each project in your main list (e.g., from 99acres or a master list)
     print(PROJECT_KEY)
-    cursor.execute(f"SELECT {PROJECT_KEY} FROM 99acres_table")  # or your master list
-    print("Fetched project IDs from 99acres_table:")
-
-    projects = [r[PROJECT_KEY] for r in cursor.fetchall()]
+    print("Fetched project IDs from uploaded CSV:")
+    projects = xids
     print(projects)
     for project_id in projects:
         for data_point in columns:
@@ -102,5 +99,7 @@ def update_matching_score():
     cursor.close()
     conn.close()
 
+# Update main guard for new signature
 if __name__ == "__main__":
-    update_matching_score()
+    # Example: update_matching_score([123, 456])
+    pass
