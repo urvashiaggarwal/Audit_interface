@@ -22,7 +22,7 @@ class DataPointScore(BaseModel):
     c3_normalised: Optional[str]
 
 class GeminiClient:
-    def __init__(self, model_name='gemini-2.5-flash-preview-04-17', prompt_path='gemini_prompts.json'):
+    def __init__(self, model_name='gemini-2.5-flash', prompt_path='gemini_prompts.json'):
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise ValueError("GEMINI_API_KEY not set")

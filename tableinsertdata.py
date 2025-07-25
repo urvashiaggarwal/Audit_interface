@@ -79,20 +79,81 @@ def update_matching_score(xids):
             print(f"  v_housing: {v_housing}")
             print(f"  v_squareyards: {v_squareyards}")
 
-            # Insert or update in competition_oprns
-            insert_query = """
-                INSERT INTO competition_oprns_audit_data (
-                    index_value, data_point_name, value_99acres, c1, c2, c3
-                ) VALUES (%s, %s, %s, %s, %s, %s)
-                ON DUPLICATE KEY UPDATE
-                    value_99acres=VALUES(value_99acres),
-                    c1=VALUES(c1),
-                    c2=VALUES(c2),
-                    c3=VALUES(c3)
-            """
-            cursor.execute(insert_query, (project_id, data_point, v_99acres, v_magicbricks, v_housing, v_squareyards))
-            res = cursor.fetchone()
-            print(res)
+            if data_point.lower() == 'amenities_list':
+                # Create amenities table if not exists
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS competition_amenities (
+                        `Index` INT PRIMARY KEY,
+                        `99acres` TEXT,
+                        `C1` TEXT,
+                        `C2` TEXT,
+                        `C3` TEXT,
+                        `missing_amenities` TEXT
+                    )
+                ''')
+                # Insert or update amenities row only for input XIDs
+                if project_id in projects:
+                    insert_query = '''
+                        INSERT INTO competition_amenities (`Index`, `99acres`, `C1`, `C2`, `C3`)
+                        VALUES (%s, %s, %s, %s, %s)
+                        ON DUPLICATE KEY UPDATE
+                            `99acres`=VALUES(`99acres`),
+                            `C1`=VALUES(`C1`),
+                            `C2`=VALUES(`C2`),
+                            `C3`=VALUES(`C3`)
+                    '''
+                    cursor.execute(insert_query, (project_id, v_99acres, v_magicbricks, v_housing, v_squareyards))
+                    conn.commit()
+            else:
+                # Insert or update in competition_oprns_audit_data
+                insert_query = """
+                    INSERT INTO competition_oprns_audit_data (
+                        index_value, data_point_name, value_99acres, c1, c2, c3
+                    ) VALUES (%s, %s, %s, %s, %s, %s)
+                    ON DUPLICATE KEY UPDATE
+                        value_99acres=VALUES(value_99acres),
+                        c1=VALUES(c1),
+                        c2=VALUES(c2),
+                        c3=VALUES(c3)
+                """
+                cursor.execute(insert_query, (project_id, data_point, v_99acres, v_magicbricks, v_housing, v_squareyards))
+                conn.commit()
+
+    # Process amenities for only the given XIDs
+    import pandas as pd, re
+    def extract_amenities_99acres(amenities_str):
+        if pd.isna(amenities_str):
+            return []
+        items = re.split(r',\s*', amenities_str)
+        return list(set([re.sub(r'^\d+:\s*', '', item).strip().lower() for item in items]))
+    def extract_amenities_other(text):
+        if pd.isna(text):
+            return []
+        items = re.split(r',|;|/|&', text)
+        return list(set([item.strip().lower() for item in items if item.strip()]))
+    # Fetch amenities for these XIDs
+    if projects:
+        cursor.execute(f"SELECT * FROM competition_amenities WHERE `Index` IN ({','.join(['%s']*len(projects))})", tuple(projects))
+        amenities_rows = cursor.fetchall()
+        if amenities_rows:
+            df = pd.DataFrame(amenities_rows)
+            df['99acres_clean'] = df['99acres'].apply(extract_amenities_99acres)
+            df['C1_clean'] = df['C1'].apply(extract_amenities_other)
+            df['C2_clean'] = df['C2'].apply(extract_amenities_other)
+            df['C3_clean'] = df['C3'].apply(extract_amenities_other)
+            df['combined_C'] = df.apply(lambda row: list(set(row['C1_clean'] + row['C2_clean'] + row['C3_clean'])), axis=1)
+            df['missing_amenities'] = df.apply(
+                lambda row: sorted(set(map(str.lower, row['99acres_clean'])) - set(map(str.lower, row['combined_C']))),
+                axis=1
+            )
+            for idx, row in df.iterrows():
+                cell_value = ', '.join(row['missing_amenities'])
+                update_query = '''
+                    UPDATE competition_amenities
+                    SET missing_amenities = %s
+                    WHERE `Index` = %s
+                '''
+                cursor.execute(update_query, (cell_value, row["Index"]))
             conn.commit()
 
     print(" Data mapping and insertion complete.")

@@ -24,8 +24,11 @@
             <span id="file-chosen">No file chosen</span>
             <button type="submit" name="action" value="update_score">Update matching score</button>
         </form>
-        <form method="POST" action="/get_output_csv" style="margin-top:20px;">
-            <button type="submit" class="output-btn">Get Output CSV</button>
+        <form method="POST" action="/get_output_csv" style="margin-top:20px;" id="csv-download-form">
+            <button type="submit" class="output-btn" id="download-btn">Get Output CSV</button>
+        </form>
+        <form method="POST" action="/get_amenities_csv" style="margin-top:10px;" id="amenities-download-form">
+            <button type="submit" class="output-btn" id="download-amenities-btn">Get Amenities CSV</button>
         </form>
     </div>
     <script>
@@ -41,6 +44,33 @@
         // Spinner logic
         document.getElementById('main-form').addEventListener('submit', function() {
             document.getElementById('spinner-overlay').style.display = 'flex';
+        });
+
+        // Reset interface after CSV download
+        document.getElementById('csv-download-form').addEventListener('submit', function(e) {
+            // Wait a short time to allow download to trigger, then reset UI
+            setTimeout(function() {
+                // Reset file input
+                fileInput.value = '';
+                fileChosen.textContent = 'No file chosen';
+                // Remove messages
+                const successMsg = document.querySelector('.success-message');
+                if (successMsg) successMsg.remove();
+                const errorMsg = document.querySelector('.error-message');
+                if (errorMsg) errorMsg.remove();
+            }, 1000); // 1 second delay to allow download
+        });
+
+        // Reset interface after amenities CSV download
+        document.getElementById('amenities-download-form').addEventListener('submit', function(e) {
+            setTimeout(function() {
+                fileInput.value = '';
+                fileChosen.textContent = 'No file chosen';
+                const successMsg = document.querySelector('.success-message');
+                if (successMsg) successMsg.remove();
+                const errorMsg = document.querySelector('.error-message');
+                if (errorMsg) errorMsg.remove();
+            }, 1000);
         });
     </script>
     <style>

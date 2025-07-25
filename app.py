@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, send_file
+from flask import Flask, render_template, request, redirect, send_file, session
 import pandas as pd
 import os, sys, json
 from dotenv import load_dotenv
@@ -17,6 +17,7 @@ from competition_operations import run_competition_operations
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), 'uploads')
+app.secret_key = 'your_secret_key'  # Add a secret key for session management
 
 @app.route('/csv')
 def csv():
@@ -126,6 +127,7 @@ def index():
                 if 'xid' not in df.columns:
                     return render_template('index.html', error="CSV must contain an 'xid' column")
                 xids = [int(x) for x in df['xid'].dropna().unique()]
+                session['xids'] = xids  # Store xids in session
                 update_matching_score(xids)
                 run_competition_operations()
                 return render_template('index.html', message="✅ Matching score updated and scoring complete!")
@@ -151,8 +153,12 @@ def get_output_csv():
     import pandas as pd
     import os
     from dotenv import load_dotenv
+    from io import BytesIO
     load_dotenv()
     try:
+        xids = session.get('xids', None)
+        if not xids:
+            return render_template('index.html', error="No XIDs found for export. Please upload a file first.")
         conn = mysql.connector.connect(
             host=os.getenv("MYSQL_HOST"),
             user=os.getenv("MYSQL_USER"),
@@ -161,7 +167,10 @@ def get_output_csv():
             connection_timeout=5,
             use_pure=True
         )
-        df = pd.read_sql("SELECT * FROM bible_oprns_data", conn)
+        placeholders = ','.join(['%s'] * len(xids))
+        # Exclude amenities_list from main output
+        query = f"SELECT * FROM competition_oprns_audit_data WHERE index_value IN ({placeholders}) AND data_point_name != 'amenities_list'"
+        df = pd.read_sql(query, conn, params=tuple(xids))
         output = BytesIO()
         df.to_csv(output, index=False)
         output.seek(0)
@@ -170,10 +179,46 @@ def get_output_csv():
             output,
             mimetype='text/csv',
             as_attachment=True,
-            download_name='audit_results.csv'
+            download_name='output_results.csv'
         )
     except Exception as e:
-        return render_template('index.html', error=f"❌ Error exporting CSV: {e}")
+        return render_template('index.html', error=f"❌ Error exporting output CSV: {e}")
+
+@app.route('/get_amenities_csv', methods=['POST'])
+def get_amenities_csv():
+    import mysql.connector
+    import pandas as pd
+    import os
+    from dotenv import load_dotenv
+    from io import BytesIO
+    load_dotenv()
+    try:
+        xids = session.get('xids', None)
+        if not xids:
+            return render_template('index.html', error="No XIDs found for export. Please upload a file first.")
+        conn = mysql.connector.connect(
+            host=os.getenv("MYSQL_HOST"),
+            user=os.getenv("MYSQL_USER"),
+            password=os.getenv("MYSQL_PASSWORD"),
+            database=os.getenv("MYSQL_DATABASE"),
+            connection_timeout=5,
+            use_pure=True
+        )
+        placeholders = ','.join(['%s'] * len(xids))
+        query = f"SELECT * FROM competition_amenities WHERE `Index` IN ({placeholders})"
+        df = pd.read_sql(query, conn, params=tuple(xids))
+        output = BytesIO()
+        df.to_csv(output, index=False)
+        output.seek(0)
+        conn.close()
+        return send_file(
+            output,
+            mimetype='text/csv',
+            as_attachment=True,
+            download_name='amenities_results.csv'
+        )
+    except Exception as e:
+        return render_template('index.html', error=f"❌ Error exporting amenities CSV: {e}")
 
 if __name__ == '__main__':
     app.run(debug=True)
